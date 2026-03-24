@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RBXAI — Roblox Script Engine | By.DevFahmi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#080a12;color:#c9d1d9;font-family:'Space Grotesk','Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column;background-image:radial-gradient(ellipse at 10% 20%,rgba(97,175,239,.04) 0%,transparent 50%),radial-gradient(ellipse at 90% 80%,rgba(224,108,117,.04) 0%,transparent 50%);}
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:#0d0f1c;}
+  ::-webkit-scrollbar-thumb{background:#2a2d3e;border-radius:3px;}
+  ::-webkit-scrollbar-thumb:hover{background:#3d4166;}
+
+  /* HEADER */
+  header{background:rgba(13,15,28,.97);border-bottom:1px solid #1e2130;padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
+  .logo-box{width:34px;height:34px;background:linear-gradient(135deg,#e06c75,#c678dd);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;font-family:'JetBrains Mono',monospace;flex-shrink:0;}
+  .logo-title{font-weight:700;font-size:16px;letter-spacing:.3px;background:linear-gradient(90deg,#e06c75,#c678dd,#61afef);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .logo-sub{font-size:10px;color:#4a5568;letter-spacing:1.5px;text-transform:uppercase;margin-top:-2px;}
+  .tab-group{display:flex;gap:4px;background:#0d0f1c;padding:4px;border-radius:10px;border:1px solid #1e2130;}
+  .tab-btn{padding:5px 14px;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;font-family:'Space Grotesk',sans-serif;}
+  .tab-btn.active{background:#1e2130;color:#61afef;}
+  .tab-btn:not(.active){background:transparent;color:#6b7280;}
+  .tab-btn:hover{background:#1e2130;}
+  .credit-badge{font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:.5px;background:linear-gradient(90deg,#c678dd,#61afef);-webkit-background-clip:text;-webkit-text-fill-color:transparent;border-left:1px solid #2a2d3e;padding-left:14px;}
+  .online-dot{width:7px;height:7px;background:#98c379;border-radius:50%;box-shadow:0 0 6px #98c379;}
+
+  /* LAYOUT */
+  .app-body{display:flex;flex:1;overflow:hidden;height:calc(100vh - 56px);}
+
+  /* SIDEBAR */
+  aside{width:220px;min-width:220px;background:#0a0c16;border-right:1px solid #1e2130;display:flex;flex-direction:column;overflow:hidden;transition:width .2s;}
+  aside.closed{width:0;min-width:0;}
+  .sidebar-section{padding:14px 12px 8px;border-bottom:1px solid #1e2130;}
+  .sidebar-label{font-size:10px;color:#4a5568;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-weight:600;}
+  .hist-empty{font-size:11px;color:#3d4166;text-align:center;padding:20px 0;}
+  .hist-list{overflow-y:auto;max-height:35vh;}
+  .hist-item{padding:8px 10px;border-radius:6px;cursor:pointer;margin-bottom:4px;border:1px solid transparent;transition:all .15s;}
+  .hist-item:hover{background:#1a1d2e;border-color:#2a2d3e;}
+  .hist-title{font-size:11px;color:#abb2bf;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .hist-time{font-size:10px;color:#4a5568;margin-top:2px;}
+  .sidebar-scroll{padding:12px;flex:1;overflow-y:auto;}
+  .quick-btn{width:100%;text-align:left;padding:7px 9px;background:transparent;border:1px solid #1e2130;border-radius:6px;color:#6b7280;font-size:11px;cursor:pointer;margin-bottom:4px;transition:all .15s;font-family:'Space Grotesk',sans-serif;}
+  .quick-btn:hover{background:#1a1d2e;border-color:#61afef;color:#61afef;}
+
+  /* MAIN */
+  main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+  /* CHAT */
+  #chat-view{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;}
+  .msg{display:flex;gap:10px;animation:slideIn .2s ease;}
+  .msg.user{flex-direction:row-reverse;}
+  .avatar{width:30px;height:30px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
+  .avatar.ai{background:linear-gradient(135deg,#e06c75,#c678dd);}
+  .avatar.user{background:linear-gradient(135deg,#61afef,#528bcc);}
+  .bubble{max-width:80%;border-radius:12px;padding:12px 16px;font-size:13.5px;line-height:1.7;}
+  .bubble.ai{background:#0f1120;border:1px solid #1e2130;}
+  .bubble.user{background:#1a2744;border:1px solid #2a4a7a;}
+
+  /* TYPING */
+  .typing-dot{width:7px;height:7px;background:#61afef;border-radius:50%;animation:pulse 1.2s infinite;}
+
+  /* CODE BLOCK */
+  .code-wrap{border-radius:10px;overflow:hidden;border:1px solid #2a2d3e;margin-bottom:12px;}
+  .code-header{background:#1a1d2e;padding:6px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a2d3e;}
+  .code-lang{color:#e06c75;font-size:11px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;}
+  .copy-btn{background:transparent;border:1px solid #3d4166;color:#6b7280;padding:2px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;transition:all .2s;}
+  .copy-btn.ok{background:#98c379;border-color:#98c379;color:#1a1d2e;}
+  .code-body{background:#0d0f1c;overflow-x:auto;padding:16px 0;}
+  .code-table{border-spacing:0;width:100%;}
+  .ln{padding:0 16px 0 12px;color:#3d4166;font-size:12px;font-family:'JetBrains Mono',monospace;user-select:none;text-align:right;min-width:40px;line-height:1.6;}
+  .lc{padding:0 16px 0 4px;font-size:13px;font-family:'JetBrains Mono',monospace;white-space:pre;line-height:1.6;}
+  .open-editor-btn{font-size:11px;background:transparent;border:1px solid #2a2d3e;color:#6b7280;padding:3px 10px;border-radius:4px;cursor:pointer;margin-bottom:8px;transition:all .2s;font-family:'Space Grotesk',sans-serif;}
+  .open-editor-btn:hover{border-color:#61afef;color:#61afef;}
+
+  /* INPUT BAR */
+  .input-bar{padding:16px 20px;border-top:1px solid #1e2130;background:rgba(10,12,22,.97);}
+  .input-row{display:flex;gap:10px;align-items:flex-end;}
+  #chat-input{flex:1;background:#0d0f1c;color:#c9d1d9;border:1px solid #2a2d3e;border-radius:10px;padding:12px 16px;font-size:13px;font-family:'Space Grotesk',sans-serif;resize:none;line-height:1.6;transition:border-color .2s;}
+  #chat-input:focus{outline:none;border-color:#61afef;}
+  .send-btn{width:44px;height:44px;border-radius:10px;border:none;background:#61afef;color:#0d0f1c;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:all .2s;font-weight:700;flex-shrink:0;}
+  .send-btn:disabled{background:#1e2130;color:#3d4166;cursor:not-allowed;}
+  .send-btn:hover:not(:disabled){background:#528bcc;}
+  .input-hint{font-size:10px;color:#3d4166;margin-top:6px;text-align:center;}
+  .credit-footer{margin-top:8px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .credit-line{height:1px;width:60px;}
+  .credit-line.left{background:linear-gradient(90deg,transparent,#2a2d3e);}
+  .credit-line.right{background:linear-gradient(90deg,#2a2d3e,transparent);}
+  .credit-text{font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:600;background:linear-gradient(90deg,#c678dd,#61afef,#e06c75);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px;}
+
+  /* EDITOR TAB */
+  #editor-view{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;}
+  .editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .panel-label{font-size:12px;color:#4a5568;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;font-weight:600;}
+  #editor-textarea{width:100%;background:#0d0f1c;color:#abb2bf;border:1px solid #2a2d3e;border-radius:8px;padding:16px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;tab-size:4;resize:none;}
+  #editor-textarea:focus{outline:none;border-color:#61afef;}
+  .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+  .action-btn{padding:9px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Space Grotesk',sans-serif;}
+  .action-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .action-btn:hover:not(:disabled){opacity:.85;transform:translateY(-1px);}
+  .send-to-chat-btn{width:100%;margin-top:8px;padding:9px;border-radius:8px;border:1px solid #2a2d3e;background:transparent;color:#6b7280;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;font-family:'Space Grotesk',sans-serif;}
+  .send-to-chat-btn:hover{border-color:#61afef;color:#61afef;}
+  .result-panel{background:#0a0c16;border:1px solid #1e2130;border-radius:10px;padding:16px;min-height:400px;overflow-y:auto;}
+  .result-empty{color:#3d4166;font-size:12px;text-align:center;padding-top:60px;}
+  .result-empty-icon{font-size:40px;margin-bottom:12px;}
+  .mode-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;margin-bottom:12px;font-size:11px;font-weight:600;}
+
+  /* MARKDOWN */
+  .md-h2{font-size:15px;font-weight:700;color:#61afef;margin:10px 0 4px;font-family:'Space Grotesk',sans-serif;}
+  .md-h3{font-size:13px;font-weight:600;color:#98c379;margin:6px 0 2px;}
+  .md-li{display:flex;gap:8px;margin:2px 0;}
+  .md-bullet{color:#e06c75;}
+  .md-code{background:#1e2130;color:#e06c75;padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:12px;}
+  .md-strong{color:#e5c07b;font-weight:600;}
+  .md-em{color:#98c379;font-style:italic;}
+  .md-hr{border:none;border-top:1px solid #2a2d3e;margin:12px 0;}
+  .md-blockquote{border-left:3px solid #61afef;padding-left:12px;color:#6b7280;font-style:italic;margin:6px 0;}
+  .md-num{display:flex;gap:8px;margin:2px 0;}
+  .md-numkey{color:#d19a66;min-width:16px;}
+
+  /* SPINNER */
+  .spinner{width:12px;height:12px;border:2px solid;border-radius:50%;animation:spin .6s linear infinite;}
+  .big-spinner{width:40px;height:40px;border:3px solid #1e2130;border-top-color:#61afef;border-radius:50%;animation:spin .8s linear infinite;}
+
+  @keyframes slideIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes pulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* RESPONSIVE */
+  @media(max-width:700px){
+    .editor-grid{grid-template-columns:1fr;}
+    aside{width:0;min-width:0;}
+    aside.open{width:220px;min-width:220px;position:absolute;z-index:50;height:calc(100vh - 56px);}
+    .credit-badge{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button onclick="toggleSidebar()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:18px;padding:4px;">☰</button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="logo-box">R</div>
+      <div>
+        <div class="logo-title">RBXAI</div>
+        <div class="logo-sub">Roblox Script Engine</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-group">
+    <button class="tab-btn active" id="tab-chat" onclick="switchTab('chat')">💬 Chat</button>
+    <button class="tab-btn" id="tab-editor" onclick="switchTab('editor')">⚡ Analyzer</button>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span class="credit-badge">By.DevFahmi</span>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="online-dot"></div>
+      <span style="font-size:11px;color:#6b7280;">Online</span>
+    </div>
+  </div>
+</header>
+
+<!-- APP BODY -->
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Script History</div>
+      <div id="hist-list" class="hist-list">
+        <div id="hist-empty" class="hist-empty">Belum ada script</div>
+      </div>
+    </div>
+    <div class="sidebar-scroll">
+      <div class="sidebar-label">Quick Scripts</div>
+      <div id="quick-list"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- CHAT VIEW -->
+    <div id="chat-view" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;">
+    </div>
+
+    <!-- EDITOR VIEW -->
+    <div id="editor-view" style="flex:1;overflow-y:auto;padding:20px;display:none;flex-direction:column;gap:16px;">
+      <div class="editor-grid">
+        <div>
+          <div class="panel-label">📝 Script Editor</div>
+          <textarea id="editor-textarea" rows="22" spellcheck="false">-- Paste script Anda di sini untuk di-debug atau di-optimalkan
+
+local Players = game:GetService("Players")
+
+Players.PlayerAdded:Connect(function(player)
+    print(player.Name .. " joined the game!")
+end)</textarea>
+          <div class="action-grid">
+            <button class="action-btn" id="btn-debug" onclick="analyzeCode('debug')" style="border:1px solid #e06c7540;background:#e06c7510;color:#e06c75;">🔍 Debug</button>
+            <button class="action-btn" id="btn-optimize" onclick="analyzeCode('optimize')" style="border:1px solid #d19a6640;background:#d19a6610;color:#d19a66;">⚡ Optimize</button>
+            <button class="action-btn" id="btn-validate" onclick="analyzeCode('validate')" style="border:1px solid #98c37940;background:#98c37910;color:#98c379;">✅ Validate</button>
+            <button class="action-btn" id="btn-explain" onclick="analyzeCode('explain')" style="border:1px solid #61afef40;background:#61afef10;color:#61afef;">📖 Explain</button>
+          </div>
+          <button class="send-to-chat-btn" onclick="sendEditorToChat()">💬 Kirim ke Chat AI</button>
+        </div>
+        <div>
+          <div class="panel-label" id="result-label">📊 Hasil Analisis</div>
+          <div class="result-panel" id="result-panel">
+            <div class="result-empty">
+              <div class="result-empty-icon">🤖</div>
+              <div>Pilih tindakan analisis di sebelah kiri</div>
+              <div style="margin-top:8px;color:#2a2d3e;">Debug • Optimize • Validate • Explain</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INPUT BAR -->
+    <div class="input-bar" id="input-bar">
+      <div class="input-row">
+        <textarea id="chat-input" rows="3" placeholder="Deskripsikan script yang ingin dibuat, atau tempel kode untuk di-debug... (Enter untuk kirim)"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">↑</button>
+      </div>
+      <div class="input-hint">Shift+Enter untuk baris baru • Enter untuk kirim</div>
+      <div class="credit-footer">
+        <div class="credit-line left"></div>
+        <span class="credit-text">By.DevFahmi</span>
+        <div class="credit-line right"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   SYSTEM PROMPT
+═══════════════════════════════════════════ */
+const SYSTEM_PROMPT = `You are RBXAI — an elite Roblox Lua scripting engine. You are the world's most precise, expert-level Roblox developer AI.
+
+## CORE IDENTITY
+- You ONLY write for Roblox Studio (Luau/Lua 5.1 compatible)
+- You NEVER produce code that won't work in Roblox
+- You are hyper-precise, think critically about every API call, scope, and side-effect
+- You understand server/client architecture deeply
+- You always use best practices and optimize for performance
+
+## ROBLOX API MASTERY
+You have complete knowledge of:
+- Services: game:GetService() for Players, RunService, TweenService, UserInputService, ContextActionService, ReplicatedStorage, ServerStorage, ServerScriptService, Workspace, Lighting, SoundService, DataStoreService, HttpService, MessagingService, MarketplaceService, BadgeService, GroupService, PhysicsService, CollectionService, MemoryStoreService, StarterGui, StarterPack, StarterPlayer, Teams, Chat, TextService, GuiService
+- Instance API: FindFirstChild, FindFirstChildOfClass, FindFirstAncestorOfClass, GetChildren, GetDescendants, IsA, Clone, Destroy, WaitForChild, Instance.new
+- CFrame & Vector3 operations, lerping, CFrame.lookAt
+- RemoteEvent, RemoteFunction, BindableEvent — OnServerEvent, OnClientEvent, FireServer, FireClient, FireAllClients
+- TweenService:Create with TweenInfo
+- UserInputService — InputBegan, InputEnded, IsKeyDown, Enum.KeyCode
+- RunService — Heartbeat, RenderStepped, Stepped, IsServer, IsClient
+- DataStoreService — GetAsync, SetAsync, UpdateAsync with pcall
+- Physics — BodyVelocity, AlignPosition, HingeConstraint, etc.
+- GUI — ScreenGui, Frame, TextLabel, TextButton, ScrollingFrame, UIListLayout, UICorner, UIStroke
+- Animation — AnimationController, Animator, LoadAnimation, AnimationTrack
+- Character — Humanoid, HumanoidRootPart, Tool, Handle
+- Raycasting — workspace:Raycast, RaycastParams
+- PathfindingService — CreatePath, ComputeAsync, GetWaypoints
+- Attributes — GetAttribute, SetAttribute
+- CollectionService tags — AddTag, RemoveTag, HasTag, GetTagged
+
+## SCRIPT TYPES
+- Script (ServerScript): server only, access ServerStorage. NEVER use LocalPlayer here.
+- LocalScript: client only, access LocalPlayer, PlayerGui. Place in StarterPlayerScripts or StarterGui.
+- ModuleScript: returns table/value, used with require(), can be shared.
+
+## SECURITY RULES
+- NEVER trust client data for important game logic
+- Use RemoteEvents for client→server, never give clients authority
+- Sanitize all user inputs
+- Use pcall() for ALL DataStore, HTTP operations
+- Never put sensitive logic in LocalScripts
+
+## CODE QUALITY
+1. Descriptive comments
+2. camelCase for variables, PascalCase for classes/modules
+3. Disconnect events when done to prevent memory leaks
+4. Use :WaitForChild() in LocalScripts
+5. pcall/xpcall error handling
+6. Avoid expensive operations in Heartbeat/RenderStepped
+7. Use task.spawn(), task.delay(), task.wait() instead of deprecated spawn(), delay(), wait()
+8. Use string.format() for complex concatenation
+
+## OUTPUT FORMAT
+When generating scripts:
+1. Brief description
+2. Script type and placement location
+3. Dependencies (RemoteEvents, ModuleScripts needed)
+4. Complete working script with inline comments
+5. Setup Instructions if needed
+6. Flag potential issues
+
+When debugging:
+1. Exact line and nature of error
+2. WHY it's an error
+3. Corrected code
+4. What was changed and why
+
+ALWAYS wrap Lua code in triple backticks with lua: \`\`\`lua ... \`\`\`
+ALWAYS be 100% accurate. If unsure, say so and provide the safest alternative.`;
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+let chatHistory = [];
+let isLoading = false;
+let isAnalyzing = false;
+let scriptHistory = [];
+let histId = 0;
+let currentTab = 'chat';
+let sidebarOpen = true;
+
+const QUICK_PROMPTS = [
+  "Buat sistem leaderboard dengan DataStore",
+  "Buat GUI shop dengan RemoteFunction",
+  "Buat NPC pathfinding dengan combat",
+  "Buat sistem team & respawn",
+  "Buat admin commands system",
+  "Buat weapon system dengan cooldown",
+  "Buat cutscene dengan TweenService",
+  "Buat round system untuk game"
+];
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+window.onload = () => {
+  renderQuickList();
+  appendMessage('assistant', buildWelcome());
+  document.getElementById('chat-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+};
+
+function buildWelcome() {
+  return `## 🎮 Selamat datang di **RBXAI** — Roblox Script Intelligence
+
+Saya adalah AI khusus pembuatan script Roblox yang:
+- ✅ Menulis Luau/Lua yang **100% bekerja** di Roblox Studio
+- ✅ Memahami **Server/Client architecture** secara mendalam
+- ✅ Menguasai seluruh **Roblox API** (Services, Instances, Events, dll)
+- ✅ Mendeteksi & memperbaiki **error** secara akurat
+- ✅ Mengoptimalkan **performance** script
+- ✅ Berfikir kritis tentang **keamanan & best practices**
+
+**Apa yang bisa saya buat untuk Anda?**
+
+- \`/generate\` — Buat script baru dari deskripsi
+- \`/debug\` — Analisis & perbaiki error pada script
+- \`/optimize\` — Optimalkan performa script
+- \`/explain\` — Jelaskan cara kerja script
+
+Atau langsung ketik kebutuhan Anda! Contoh:
+> *"Buat sistem double jump untuk karakter player"*
+> *"Debug script ini: [paste code]"*
+> *"Buat admin command /kick dan /ban"*
+
+---
+✨ *Dibuat dengan dedikasi oleh* **By.DevFahmi**`;
+}
+
+/* ═══════════════════════════════════════════
+   TAB & SIDEBAR
+═══════════════════════════════════════════ */
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('chat-view').style.display = tab==='chat'?'flex':'none';
+  document.getElementById('editor-view').style.display = tab==='editor'?'flex':'none';
+  document.getElementById('input-bar').style.display = tab==='chat'?'block':'none';
+  document.getElementById('tab-chat').classList.toggle('active', tab==='chat');
+  document.getElementById('tab-editor').classList.toggle('active', tab==='editor');
+}
+
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  const s = document.getElementById('sidebar');
+  s.classList.toggle('closed', !sidebarOpen);
+  s.classList.toggle('open', sidebarOpen);
+}
+
+/* ═══════════════════════════════════════════
+   QUICK PROMPTS
+═══════════════════════════════════════════ */
+function renderQuickList() {
+  const el = document.getElementById('quick-list');
+  el.innerHTML = QUICK_PROMPTS.map(p =>
+    `<button class="quick-btn" onclick="useQuick(${JSON.stringify(p)})">▸ ${p}</button>`
+  ).join('');
+}
+
+function useQuick(p) {
+  document.getElementById('chat-input').value = p;
+  switchTab('chat');
+  document.getElementById('chat-input').focus();
+}
+
+/* ═══════════════════════════════════════════
+   SYNTAX HIGHLIGHT
+═══════════════════════════════════════════ */
+function highlightLua(code) {
+  const esc = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const keywords = ['local','function','end','if','then','else','elseif','for','do','while','repeat','until','return','break','not','and','or','in','nil','true','false','self'];
+  const robloxG = ['game','workspace','script','Instance','Vector3','CFrame','Color3','BrickColor','Enum','UDim','UDim2','Rect','NumberRange','NumberSequence','ColorSequence','TweenInfo','Ray','RaycastParams','tick','time','Random'];
+  const builtins = ['print','warn','error','pcall','xpcall','ipairs','pairs','next','select','type','tostring','tonumber','rawget','rawset','require','assert','setmetatable','getmetatable','table','string','math','os','coroutine','task','wait','spawn','delay','unpack'];
+
+  let r = esc;
+  r = r.replace(/"([^"\\]|\\.)*"|'([^'\\]|\\.)*'|\[\[[\s\S]*?\]\]/g, m => `<span style="color:#98c379">${m}</span>`);
+  r = r.replace(/(--[^\n]*)/g, m => `<span style="color:#5c6370;font-style:italic">${m}</span>`);
+  r = r.replace(/\b(\d+\.?\d*)\b/g, m => `<span style="color:#d19a66">${m}</span>`);
+  keywords.forEach(k => { r = r.replace(new RegExp(`\\b(${k})\\b`,'g'), `<span style="color:#c678dd">$1</span>`); });
+  robloxG.forEach(k => { r = r.replace(new RegExp(`\\b(${k})\\b`,'g'), `<span style="color:#e5c07b">$1</span>`); });
+  builtins.forEach(k => { r = r.replace(new RegExp(`\\b(${k})\\b`,'g'), `<span style="color:#56b6c2">$1</span>`); });
+  r = r.replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g, `<span style="color:#61afef">$1</span>`);
+  return r;
+}
+
+function buildCodeBlock(code, lang='lua') {
+  const id = 'cb_' + Math.random().toString(36).slice(2);
+  const lines = code.split('\n').map((line,i) =>
+    `<tr><td class="ln">${i+1}</td><td class="lc">${highlightLua(line)}</td></tr>`
+  ).join('');
+  return `<div class="code-wrap">
+    <div class="code-header">
+      <span class="code-lang">${lang}</span>
+      <button class="copy-btn" id="${id}" onclick="copyCode(${JSON.stringify(code)}, '${id}')">Copy</button>
+    </div>
+    <div class="code-body"><table class="code-table">${lines}</table></div>
+  </div>
+  <button class="open-editor-btn" onclick="openInEditor(${JSON.stringify(code)})">📋 Buka di Editor</button>`;
+}
+
+function copyCode(code, btnId) {
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById(btnId);
+    btn.textContent = '✓ Copied'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 2000);
+  });
+}
+
+function openInEditor(code) {
+  document.getElementById('editor-textarea').value = code;
+  switchTab('editor');
+}
+
+/* ═══════════════════════════════════════════
+   MARKDOWN PARSER
+═══════════════════════════════════════════ */
+function parseMarkdown(text) {
+  const parts = [];
+  const re = /```(\w*)\n?([\s\S]*?)```/g;
+  let last = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push({ type:'text', content: text.slice(last, m.index) });
+    parts.push({ type:'code', lang: m[1]||'lua', content: m[2].trim() });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push({ type:'text', content: text.slice(last) });
+  return parts;
+}
+
+function renderMarkdownText(text) {
+  return text.split('\n').map(line => {
+    if (/^## /.test(line)) return `<div class="md-h2">${line.slice(3)}</div>`;
+    if (/^### /.test(line)) return `<div class="md-h3">${line.slice(4)}</div>`;
+    if (/^---/.test(line)) return `<hr class="md-hr"/>`;
+    if (/^> /.test(line)) return `<div class="md-blockquote">${line.slice(2)}</div>`;
+    if (/^- /.test(line)) {
+      let t = line.slice(2);
+      t = applyInline(t);
+      return `<div class="md-li"><span class="md-bullet">▸</span><span>${t}</span></div>`;
+    }
+    if (/^\d+\. /.test(line)) {
+      const nm = line.match(/^(\d+)\. (.*)/);
+      return `<div class="md-num"><span class="md-numkey">${nm[1]}.</span><span>${applyInline(nm[2])}</span></div>`;
+    }
+    if (!line.trim()) return `<div style="height:6px"></div>`;
+    return `<div>${applyInline(line)}</div>`;
+  }).join('');
+}
+
+function applyInline(t) {
+  t = t.replace(/\*\*(.+?)\*\*/g, '<span class="md-strong">$1</span>');
+  t = t.replace(/\*(.+?)\*/g, '<span class="md-em">$1</span>');
+  t = t.replace(/`(.+?)`/g, '<code class="md-code">$1</code>');
+  return t;
+}
+
+function renderContent(text) {
+  const parts = parseMarkdown(text);
+  return parts.map(p => {
+    if (p.type === 'code') return buildCodeBlock(p.content, p.lang);
+    return `<div style="font-size:13.5px;line-height:1.7;">${renderMarkdownText(p.content)}</div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════
+   CHAT
+═══════════════════════════════════════════ */
+function appendMessage(role, content) {
+  const view = document.getElementById('chat-view');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  const isAI = role === 'assistant';
+  div.innerHTML = `
+    <div class="avatar ${isAI?'ai':'user'}">${isAI?'R':'U'}</div>
+    <div class="bubble ${isAI?'ai':'user'}">${renderContent(content)}</div>`;
+  view.appendChild(div);
+  div.scrollIntoView({ behavior:'smooth', block:'end' });
+}
+
+function showTyping() {
+  const view = document.getElementById('chat-view');
+  const div = document.createElement('div');
+  div.className = 'msg assistant';
+  div.id = 'typing-indicator';
+  div.innerHTML = `
+    <div class="avatar ai">R</div>
+    <div class="bubble ai" style="display:flex;gap:5px;align-items:center;padding:14px 18px;">
+      <div class="typing-dot" style="animation-delay:0s"></div>
+      <div class="typing-dot" style="animation-delay:.2s"></div>
+      <div class="typing-dot" style="animation-delay:.4s"></div>
+      <span style="font-size:12px;color:#4a5568;margin-left:8px;">RBXAI sedang menulis script...</span>
+    </div>`;
+  view.appendChild(div);
+  div.scrollIntoView({ behavior:'smooth', block:'end' });
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-indicator');
+  if (t) t.remove();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+  input.value = '';
+  setLoading(true);
+  appendMessage('user', text);
+  chatHistory.push({ role:'user', content: text });
+  showTyping();
+  try {
+    const reply = await callClaude(chatHistory);
+    removeTyping();
+    appendMessage('assistant', reply);
+    chatHistory.push({ role:'assistant', content: reply });
+    // Save to history if code block found
+    const cm = reply.match(/```(?:lua)?\n?([\s\S]*?)```/);
+    if (cm) {
+      histId++;
+      scriptHistory.unshift({ id: histId, title: text.slice(0,40), code: cm[1].trim(), time: new Date().toLocaleTimeString() });
+      if (scriptHistory.length > 20) scriptHistory.pop();
+      renderHistory();
+    }
+  } catch(e) {
+    removeTyping();
+    appendMessage('assistant', '❌ **Error:** Gagal menghubungi AI. Periksa koneksi internet Anda.');
+  }
+  setLoading(false);
+}
+
+function setLoading(v) {
+  isLoading = v;
+  const btn = document.getElementById('send-btn');
+  btn.disabled = v;
+}
+
+/* ═══════════════════════════════════════════
+   HISTORY
+═══════════════════════════════════════════ */
+function renderHistory() {
+  const el = document.getElementById('hist-list');
+  const empty = document.getElementById('hist-empty');
+  if (scriptHistory.length === 0) { empty && (empty.style.display='block'); return; }
+  if (empty) empty.style.display = 'none';
+  el.innerHTML = scriptHistory.map(item => `
+    <div class="hist-item" onclick="loadHistory(${item.id})">
+      <div class="hist-title">${item.title}</div>
+      <div class="hist-time">${item.time}</div>
+    </div>`).join('') + (document.getElementById('hist-empty')?'':'');
+}
+
+function loadHistory(id) {
+  const item = scriptHistory.find(i=>i.id===id);
+  if (!item) return;
+  document.getElementById('editor-textarea').value = item.code;
+  switchTab('editor');
+}
+
+/* ═══════════════════════════════════════════
+   EDITOR ACTIONS
+═══════════════════════════════════════════ */
+async function analyzeCode(mode) {
+  if (isAnalyzing) return;
+  const code = document.getElementById('editor-textarea').value.trim();
+  if (!code) return;
+  isAnalyzing = true;
+  setAnalyzeBtns(true);
+  const label = document.getElementById('result-label');
+  label.textContent = '⏳ Menganalisis...';
+  const panel = document.getElementById('result-panel');
+  panel.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:16px;"><div class="big-spinner"></div><div style="color:#4a5568;font-size:13px;">Menganalisis script...</div></div>`;
+
+  const prompts = {
+    debug: `Debug script Roblox Lua berikut. Temukan SEMUA error, bug, dan masalah potensial. Berikan penjelasan detail dan kode yang sudah diperbaiki:\n\n\`\`\`lua\n${code}\n\`\`\``,
+    optimize: `Optimalkan performa script Roblox Lua berikut. Analisis bottleneck, memory leaks, dan inefficiencies. Berikan versi yang dioptimalkan:\n\n\`\`\`lua\n${code}\n\`\`\``,
+    explain: `Jelaskan secara detail cara kerja script Roblox Lua berikut, termasuk setiap fungsi, event, dan alur logika:\n\n\`\`\`lua\n${code}\n\`\`\``,
+    validate: `Validasi script Roblox Lua berikut. Periksa: 1) Apakah tipe script yang tepat (Script/LocalScript)? 2) Apakah semua API yang digunakan valid? 3) Apakah ada security vulnerabilities? 4) Apakah ada deprecated functions? Berikan laporan lengkap:\n\n\`\`\`lua\n${code}\n\`\`\``
+  };
+
+  const modeInfo = {
+    debug:    { label:'🔍 DEBUG REPORT',       bg:'#e06c7520', color:'#e06c75', border:'#e06c7540' },
+    optimize: { label:'⚡ OPTIMIZATION REPORT', bg:'#d19a6620', color:'#d19a66', border:'#d19a6640' },
+    validate: { label:'✅ VALIDATION REPORT',   bg:'#98c37920', color:'#98c379', border:'#98c37940' },
+    explain:  { label:'📖 EXPLANATION',          bg:'#61afef20', color:'#61afef', border:'#61afef40' }
+  };
+
+  try {
+    const result = await callClaude([{ role:'user', content: prompts[mode] }]);
+    const mi = modeInfo[mode];
+    label.textContent = '📊 Hasil Analisis';
+    panel.innerHTML = `
+      <span class="mode-badge" style="background:${mi.bg};color:${mi.color};border:1px solid ${mi.border};">${mi.label}</span>
+      <div style="font-size:13px;line-height:1.7;">${renderContent(result)}</div>`;
+  } catch(e) {
+    label.textContent = '📊 Hasil Analisis';
+    panel.innerHTML = `<div style="color:#e06c75;font-size:13px;">❌ Gagal menganalisis script.</div>`;
+  }
+  isAnalyzing = false;
+  setAnalyzeBtns(false);
+}
+
+function setAnalyzeBtns(disabled) {
+  ['debug','optimize','validate','explain'].forEach(m => {
+    document.getElementById(`btn-${m}`).disabled = disabled;
+  });
+}
+
+function sendEditorToChat() {
+  const code = document.getElementById('editor-textarea').value.trim();
+  if (!code) return;
+  document.getElementById('chat-input').value = '```lua\n' + code + '\n```';
+  switchTab('chat');
+  document.getElementById('chat-input').focus();
+}
+
+/* ═══════════════════════════════════════════
+   CLAUDE API
+═══════════════════════════════════════════ */
+async function callClaude(messages) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: SYSTEM_PROMPT,
+      messages: messages
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content?.[0]?.text || 'Tidak ada respons dari AI.';
+}
+</script>
+</body>
+</html>
